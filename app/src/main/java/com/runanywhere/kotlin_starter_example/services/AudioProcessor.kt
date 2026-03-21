@@ -1,62 +1,87 @@
 package com.runanywhere.kotlin_starter_example.services
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.media.*
+import android.util.Log
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.*
-import kotlin.math.min
 
-class AudioProcessor {
+class AudioProcessor(private val context: Context) {
 
-    private var isRecording = false
+    companion object {
+        const val TAG = "AudioProcessor"
+        const val SAMPLE_RATE = 16000
+    }
 
-    fun start(onAudio: (FloatArray) -> Unit) {
+    private val sampleRate = SAMPLE_RATE
+    private var isRecording = true
+    private var audioRecord: AudioRecord? = null
 
-        val sampleRate = 16000
-        val chunkSize = 48000 // 🔥 REQUIRED for your model (3 sec)
+    suspend fun start(onAudio: (FloatArray) -> Unit) = withContext(Dispatchers.IO) {
 
-        val minBufferSize = AudioRecord.getMinBufferSize(
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT
+        // ✅ Explicit permission check before touching AudioRecord
+        if (ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(TAG, "RECORD_AUDIO permission not granted — aborting")
+            return@withContext
+        }
+
+        val bufferSize = maxOf(
+            AudioRecord.getMinBufferSize(
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            ),
+            sampleRate
         )
 
-        val audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            minBufferSize
-        )
+        if (bufferSize <= 0) {
+            Log.e(TAG, "Invalid buffer size: $bufferSize")
+            return@withContext
+        }
 
-        val shortBuffer = ShortArray(minBufferSize)
-        val floatBuffer = mutableListOf<Float>()
+        try {
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize
+            )
 
-        audioRecord.startRecording()
-        isRecording = true
+            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                Log.e(TAG, "AudioRecord failed to initialize")
+                audioRecord?.release()
+                audioRecord = null
+                return@withContext
+            }
 
-        CoroutineScope(Dispatchers.IO).launch {
+            val buffer = ShortArray(bufferSize)
+            audioRecord?.startRecording()
+            Log.d(TAG, "Recording started")
 
-            while (isRecording) {
-
-                val read = audioRecord.read(shortBuffer, 0, shortBuffer.size)
-
-                for (i in 0 until read) {
-                    floatBuffer.add(shortBuffer[i] / 32768f)
-                }
-
-                // 🔥 Once we have 48000 samples → run model
-                if (floatBuffer.size >= chunkSize) {
-
-                    val chunk = FloatArray(chunkSize)
-                    for (i in 0 until chunkSize) {
-                        chunk[i] = floatBuffer[i]
-                    }
-
-                    // remove used samples
-                    repeat(chunkSize) { floatBuffer.removeAt(0) }
-
-                    onAudio(chunk)
+            while (isActive && isRecording) {
+                val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
+                if (read > 0) {
+                    val floatBuffer = FloatArray(read) { buffer[it] / 32768f }
+                    onAudio(floatBuffer)
                 }
             }
+
+        } catch (e: SecurityException) {
+            // ✅ Explicit SecurityException handler as required
+            Log.e(TAG, "SecurityException — mic permission denied at OS level: ${e.message}")
+        } catch (e: Exception) {
+            Log.e(TAG, "AudioRecord error: ${e.message}")
+        } finally {
+            audioRecord?.stop()
+            audioRecord?.release()
+            audioRecord = null
+            Log.d(TAG, "Recording stopped and released")
         }
     }
 

@@ -1,47 +1,46 @@
 package com.runanywhere.kotlin_starter_example.data
 
-data class SoundProfile(
-    val priority: Int,
-    val pattern: LongArray,
-    val repeat: Int
+data class HapticProfile(
+    val pattern: LongArray,   // alternating off/on durations in ms
+    val repeat: Int           // -1 = no repeat, 0 = repeat from index 0
 )
 
 object SoundProfiles {
 
-    val map = mapOf(
+    val map: Map<SoundType, HapticProfile> = mapOf(
 
-        // 🚨 Strong continuous pattern
-        SoundType.SIREN to SoundProfile(
-            priority = 5,
-            pattern = longArrayOf(0, 400, 150, 400),
-            repeat = 0
-        ),
-
-        // 🚗 Short bursts
-        SoundType.HORN to SoundProfile(
-            priority = 4,
-            pattern = longArrayOf(0, 120, 80, 120, 80, 120),
+        // ── SIREN: urgent triple pulse ───────────────────────────
+        // ●●●  ●●●  ●●●
+        SoundType.SIREN to HapticProfile(
+            pattern = longArrayOf(0, 200, 100, 200, 100, 200),
             repeat = -1
         ),
 
-        // ⏰ FAST pulses (FIXED)
-        SoundType.ALARM to SoundProfile(
-            priority = 5,
-            pattern = longArrayOf(0, 150, 80, 150, 80, 150, 80, 150),
+        // ── HORN: one long strong burst ──────────────────────────
+        // ━━━━━━━━━
+        SoundType.HORN to HapticProfile(
+            pattern = longArrayOf(0, 600),
             repeat = -1
         ),
 
-        // 🔔 DOUBLE TAP (FIXED)
-        SoundType.DOORBELL to SoundProfile(
-            priority = 3,
-            pattern = longArrayOf(0, 200, 150, 200),
+        // ── ALARM: rapid double tap × 2 ──────────────────────────
+        // ●● ●●  ●● ●●
+        SoundType.ALARM to HapticProfile(
+            pattern = longArrayOf(0, 100, 50, 100, 200, 100, 50, 100),
             repeat = -1
         ),
 
-        // 🗣️ Soft repeating
-        SoundType.VOICE to SoundProfile(
-            priority = 1,
-            pattern = longArrayOf(0, 250, 250, 250),
+        // ── DOORBELL: two gentle knocks ──────────────────────────
+        // ●  ●
+        SoundType.DOORBELL to HapticProfile(
+            pattern = longArrayOf(0, 150, 150, 150),
+            repeat = -1
+        ),
+
+        // ── VOICE: single soft short tap ─────────────────────────
+        // ●
+        SoundType.VOICE to HapticProfile(
+            pattern = longArrayOf(0, 80),
             repeat = -1
         )
     )

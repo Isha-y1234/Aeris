@@ -95,6 +95,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
-
+//    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
+//
 }

@@ -1,6 +1,5 @@
 package com.runanywhere.kotlin_starter_example.ui.screens
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -23,11 +22,12 @@ fun LiveDetectionScreen(
     viewModel: MainViewModel,
     onBack: () -> Unit
 ) {
-    val sound by viewModel.currentSound.collectAsState()
+    val sound      by viewModel.currentSound.collectAsState()
+    // ✅ Real confidence from ViewModel, not hardcoded
+    val confidence by viewModel.confidence.collectAsState()
 
-    val isAlert = sound != null
+    val isAlert     = sound != null
     val accentColor = if (isAlert) Color(0xFFFF6B6B) else Color(0xFF6FB1FC)
-    val confidence = if (isAlert) 92 else 0
 
     val recentHistory = listOf(
         "Siren"    to "Just now",
@@ -74,7 +74,8 @@ fun LiveDetectionScreen(
                 .padding(horizontal = 20.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (isAlert) Color(0xFFFF6B6B).copy(alpha = 0.08f) else Color.White
+                containerColor = if (isAlert)
+                    Color(0xFFFF6B6B).copy(alpha = 0.08f) else Color.White
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
@@ -90,7 +91,8 @@ fun LiveDetectionScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isAlert) Icons.Default.Warning else Icons.Default.GraphicEq,
+                        imageVector = if (isAlert) Icons.Default.Warning
+                        else Icons.Default.GraphicEq,
                         contentDescription = null,
                         tint = accentColor,
                         modifier = Modifier.size(36.dp)
@@ -134,13 +136,14 @@ fun LiveDetectionScreen(
                         color = Color(0xFF1A2340)
                     )
                     Text(
+                        // ✅ Real value from model output
                         text = "$confidence%",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = when {
                             confidence >= 80 -> Color(0xFF6BCB77)
                             confidence >= 50 -> Color(0xFFFFD166)
-                            else            -> Color(0xFFB0B0B0)
+                            else             -> Color(0xFFB0B0B0)
                         }
                     )
                 }
@@ -154,7 +157,7 @@ fun LiveDetectionScreen(
                     color = when {
                         confidence >= 80 -> Color(0xFF6BCB77)
                         confidence >= 50 -> Color(0xFFFFD166)
-                        else            -> Color(0xFFB0B0B0)
+                        else             -> Color(0xFFB0B0B0)
                     },
                     trackColor = Color(0xFFEEF0F5)
                 )
@@ -189,7 +192,6 @@ fun LiveDetectionScreen(
                     color = Color(0xFF1A2340)
                 )
                 Spacer(Modifier.height(12.dp))
-                // ✅ Replaced WaveformBars with WaveformView
                 WaveformView(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = accentColor
@@ -230,7 +232,8 @@ fun LiveDetectionScreen(
                                     .size(8.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (index == 0) Color(0xFFFF6B6B) else Color(0xFFB0B0B0)
+                                        if (index == 0) Color(0xFFFF6B6B)
+                                        else Color(0xFFB0B0B0)
                                     )
                             )
                             Spacer(Modifier.width(10.dp))
