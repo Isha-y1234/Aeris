@@ -1,223 +1,224 @@
 package com.runanywhere.kotlin_starter_example.ui.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.runanywhere.kotlin_starter_example.ui.components.FeatureCard
-import com.runanywhere.kotlin_starter_example.ui.theme.*
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.*
+import com.runanywhere.kotlin_starter_example.viewmodel.MainViewModel
 
 @Composable
 fun HomeScreen(
-    onNavigateToChat: () -> Unit,
-    onNavigateToSTT: () -> Unit,
-    onNavigateToTTS: () -> Unit,
-    onNavigateToVoicePipeline: () -> Unit,
-    onNavigateToToolCalling: () -> Unit,
-    onNavigateToVision: () -> Unit,
-    modifier: Modifier = Modifier
+    viewModel: MainViewModel,
+    onLive: () -> Unit,
+    onSettings: () -> Unit,
+    onHaptics: () -> Unit
 ) {
+    val sound by viewModel.currentSound.collectAsState()
+    var isOn by remember { mutableStateOf(false) }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (isOn) 1.08f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+
+    val softBlueStart = Color(0xFF6FB1FC)
+    val softBlueEnd = Color(0xFFA7C6FF)
+    val alertRed = Color(0xFFFF6B6B)
+
+    val statusColor = when {
+        sound != null && isOn -> alertRed
+        isOn -> softBlueStart
+        else -> Color(0xFFB0B0B0)
+    }
+
+    val statusText = when {
+        !isOn -> "System Off"
+        sound != null -> "${sound!!.name} Detected"
+        else -> "Listening…"
+    }
+
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        PrimaryDark,
-                        Color(0xFF0F1629),
-                        PrimaryMid
-                    )
-                )
-            )
+            .background(Color(0xFFF8F9FA))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+                .padding(horizontal = 20.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            // Header
-            Header()
-            
-            Spacer(modifier = Modifier.height(40.dp))
-            
-            // Privacy info
-            PrivacyInfoCard()
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Feature grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.height(560.dp)
+
+            // ── Header ──────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(softBlueStart, softBlueEnd)
+                        )
+                    )
+                    .padding(horizontal = 24.dp, vertical = 28.dp)
             ) {
-                item {
-                    FeatureCard(
-                        title = "Chat",
-                        subtitle = "LLM Text Generation",
-                        icon = Icons.Rounded.Chat,
-                        gradientColors = listOf(AccentCyan, Color(0xFF0EA5E9)),
-                        onClick = onNavigateToChat
+                Column {
+                    Text(
+                        text = "Aeris",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
-                }
-                
-                item {
-                    FeatureCard(
-                        title = "Speech",
-                        subtitle = "Speech to Text",
-                        icon = Icons.Rounded.Mic,
-                        gradientColors = listOf(AccentViolet, Color(0xFF7C3AED)),
-                        onClick = onNavigateToSTT
-                    )
-                }
-                
-                item {
-                    FeatureCard(
-                        title = "Voice",
-                        subtitle = "Text to Speech",
-                        icon = Icons.Rounded.VolumeUp,
-                        gradientColors = listOf(AccentPink, Color(0xFFDB2777)),
-                        onClick = onNavigateToTTS
-                    )
-                }
-                
-                item {
-                    FeatureCard(
-                        title = "Pipeline",
-                        subtitle = "Voice Agent",
-                        icon = Icons.Rounded.AutoAwesome,
-                        gradientColors = listOf(AccentGreen, Color(0xFF059669)),
-                        onClick = onNavigateToVoicePipeline
-                    )
-                }
-                
-                item {
-                    FeatureCard(
-                        title = "Tools",
-                        subtitle = "Function Calling",
-                        icon = Icons.Rounded.Build,
-                        gradientColors = listOf(AccentOrange, Color(0xFFEA580C)),
-                        onClick = onNavigateToToolCalling
-                    )
-                }
-                
-                item {
-                    FeatureCard(
-                        title = "Vision",
-                        subtitle = "Image Understanding",
-                        icon = Icons.Rounded.RemoveRedEye,
-                        gradientColors = listOf(AccentPink, Color(0xFFDB2777)),
-                        onClick = onNavigateToVision
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Stay aware without looking",
+                        fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.82f)
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Model info
-            ModelInfoSection()
-            
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
 
-@Composable
-private fun Header() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Icon
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(AccentCyan, AccentViolet)
+            Spacer(Modifier.height(36.dp))
+
+            // ── Toggle ───────────────────────────────────────────
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(140.dp)
+                    .scale(pulseScale)
+                    .shadow(
+                        elevation = if (isOn) 20.dp else 6.dp,
+                        shape = CircleShape,
+                        ambientColor = softBlueStart.copy(alpha = 0.4f),
+                        spotColor = softBlueStart.copy(alpha = 0.4f)
                     )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Bolt,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Title
-        Column {
-            Text(
-                text = "RunAnywhere",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
-            Text(
-                text = "Kotlin SDK Starter",
-                style = MaterialTheme.typography.bodyMedium,
-                color = AccentCyan
-            )
-        }
-    }
-}
-
-@Composable
-private fun PrivacyInfoCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceCard.copy(alpha = 0.6f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.PrivacyTip,
-                contentDescription = null,
-                tint = AccentCyan.copy(alpha = 0.8f),
-                modifier = Modifier.size(28.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column {
-                Text(
-                    text = "Privacy-First On-Device AI",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary
+                    .clip(CircleShape)
+                    .background(
+                        if (isOn)
+                            Brush.radialGradient(listOf(softBlueStart, softBlueEnd))
+                        else
+                            Brush.radialGradient(
+                                listOf(Color(0xFFDDE3EE), Color(0xFFB8C0D0))
+                            )
+                    )
+                    .clickable { isOn = !isOn }
+            ) {
+                Icon(
+                    imageVector = if (isOn) Icons.Default.Mic else Icons.Default.MicOff,
+                    contentDescription = "Toggle",
+                    tint = Color.White,
+                    modifier = Modifier.size(48.dp)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "All AI processing happens locally on your device. No data ever leaves your phone.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted
+            }
+
+            Spacer(Modifier.height(28.dp))
+
+            // ── Status Card ──────────────────────────────────────
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(statusColor.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = when {
+                                !isOn -> Icons.Default.MicOff
+                                sound != null -> Icons.Default.Warning
+                                else -> Icons.Default.GraphicEq
+                            },
+                            contentDescription = null,
+                            tint = statusColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column {
+                        Text(
+                            text = statusText,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1A2340)
+                        )
+                        Text(
+                            text = if (isOn) "System active" else "Tap toggle to start",
+                            fontSize = 12.sp,
+                            color = Color(0xFF6B7A9A)
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(statusColor)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(28.dp))
+
+            // ── Quick Actions ────────────────────────────────────
+            Text(
+                text = "Quick Actions",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF6B7A9A),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                QuickActionCard(
+                    icon = Icons.Default.GraphicEq,
+                    label = "Live",
+                    modifier = Modifier.weight(1f),
+                    onClick = onLive
+                )
+                QuickActionCard(
+                    icon = Icons.Default.Tune,
+                    label = "Sensitivity",
+                    modifier = Modifier.weight(1f),
+                    onClick = onSettings
+                )
+                QuickActionCard(
+                    icon = Icons.Default.Vibration,
+                    label = "Haptics",
+                    modifier = Modifier.weight(1f),
+                    onClick = onHaptics
                 )
             }
         }
@@ -225,76 +226,36 @@ private fun PrivacyInfoCard() {
 }
 
 @Composable
-private fun ModelInfoSection() {
+private fun QuickActionCard(
+    icon: ImageVector,
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceCard.copy(alpha = 0.5f)
-        )
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        modifier = modifier
+            .clickable(onClick = onClick)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
+            modifier = Modifier.padding(vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ModelInfoRow(
-                icon = Icons.Rounded.Memory,
-                title = "LLM",
-                value = "SmolLM2 360M"
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            ModelInfoRow(
-                icon = Icons.Rounded.RemoveRedEye,
-                title = "VLM",
-                value = "SmolVLM 256M"
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            ModelInfoRow(
-                icon = Icons.Rounded.Hearing,
-                title = "STT",
-                value = "Whisper Tiny"
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            ModelInfoRow(
-                icon = Icons.Rounded.RecordVoiceOver,
-                title = "TTS",
-                value = "Piper Lessac"
-            )
-        }
-    }
-}
-
-@Composable
-private fun ModelInfoRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
-                tint = TextMuted,
-                modifier = Modifier.size(20.dp)
+                contentDescription = label,
+                tint = Color(0xFF6FB1FC),
+                modifier = Modifier.size(28.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF1A2340)
             )
         }
-        
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = AccentCyan
-        )
     }
 }

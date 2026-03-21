@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+
 android {
     namespace = "com.runanywhere.kotlin_starter_example"
     compileSdk = 35
@@ -44,10 +45,19 @@ android {
     buildFeatures {
         compose = true
     }
-    
+
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        jniLibs {
+            pickFirsts += listOf(
+                "lib/arm64-v8a/libonnxruntime.so",
+                "lib/armeabi-v7a/libonnxruntime.so",
+                "lib/x86/libonnxruntime.so",
+                "lib/x86_64/libonnxruntime.so"
+            )
         }
     }
 }
@@ -83,4 +93,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.3")
+
 }
