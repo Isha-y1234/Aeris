@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -34,6 +35,7 @@ import com.runanywhere.sdk.public.extensions.transcribe
 import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import com.runanywhere.kotlin_starter_example.services.playWavBytes
+import com.runanywhere.sdk.public.extensions.generate
 
 data class ConversationMessage(
     val text: String,
@@ -56,6 +58,7 @@ fun ConversationScreen(
     var isSpeaking by remember { mutableStateOf(false) }
     var listenJob by remember { mutableStateOf<Job?>(null) }
     var hasPermission by remember { mutableStateOf(false) }
+    var suggestions by remember { mutableStateOf(listOf<String>()) } // ✅ ADD HERE
 
     val softBlue = Color(0xFF6FB1FC)
     val purple = Color(0xFF9C6FFC)
@@ -74,7 +77,8 @@ fun ConversationScreen(
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
     }
 
-    val modelsReady = modelService.isSTTLoaded && modelService.isTTSLoaded
+    val modelsReady = modelService.isSTTLoaded && modelService.isTTSLoaded &&
+            modelService.isLLMLoaded
 
     fun listenForOther() {
         isListening = true
@@ -108,6 +112,44 @@ fun ConversationScreen(
                             isFromOther = true
                         )
                         isListening = false
+
+                        scope.launch {
+                            try {
+                                val prompt = buildString {
+                                    append("Conversation:\n")
+                                    messages.takeLast(5).forEach {
+                                        append(if (it.isFromOther) "Other: " else "Me: ")
+                                        append(it.text + "\n")
+                                    }
+                                    append("\nSuggest 3 short replies.")
+                                }
+
+                                val response = withContext(Dispatchers.IO) {
+                                    RunAnywhere.generate(prompt)
+                                }
+                                val raw = response.toString()
+
+                                val text = raw
+                                    .substringAfter("text=")              // remove wrapper
+                                    .substringBefore("thinkingContent")  // 🔥 MAIN FIX
+                                    .substringBefore("tokensUsed")       // backup
+                                    .substringBefore(")")                // safety
+                                    .trim()
+
+
+                                suggestions = text
+                                    .split("\n")
+                                    .map { line ->
+                                        line
+                                            .replace(Regex("^[-•\\d+.\\s]*"), "") // remove 1. , -, etc
+                                            .trim()
+                                    }
+                                    .filter { it.isNotBlank() }
+
+                            } catch (e: Exception) {
+                                suggestions = emptyList()
+                            }
+                        }
                     }
                 } else {
                     withContext(Dispatchers.Main) { isListening = false }
@@ -314,6 +356,23 @@ fun ConversationScreen(
                             )
                         } else {
                             Icon(Icons.Default.VolumeUp, contentDescription = "Speak")
+                        }
+                    }
+                }
+                // ✅ SUGGESTIONS UI (ADD HERE — OUTSIDE ROW)
+                if (suggestions.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(items = suggestions) { suggestion: String ->
+                            OutlinedButton(
+                                onClick = { myReply = suggestion },
+                                shape = RoundedCornerShape(50.dp)
+                            ) {
+                                Text(suggestion, fontSize = 12.sp, color = Color.Black)
+                            }
                         }
                     }
                 }
