@@ -30,14 +30,9 @@ import com.runanywhere.kotlin_starter_example.viewmodel.MainViewModel
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
-    modelService: ModelService,         // ✅ comes from NavHost — no second viewModel() call
-    onLive: () -> Unit,
+    modelService: ModelService,
     onSettings: () -> Unit,
-    onHaptics: () -> Unit,
-    onCaptions: () -> Unit,
-    onHistory: () -> Unit,
-    onVoiceProxy: () -> Unit,
-    onConversation: () -> Unit
+    onHaptics: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -87,7 +82,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // ── Header ──────────────────────────────────────────
+            // ── Header (Logo removed) ──────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -104,7 +99,7 @@ fun HomeScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Stay aware without looking",
+                        text = "Making sound visible",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.82f)
                     )
@@ -226,67 +221,24 @@ fun HomeScreen(
                     .padding(bottom = 12.dp)
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionCard(
-                        icon = Icons.Default.GraphicEq,
-                        label = "Live",
-                        modifier = Modifier.weight(1f),
-                        onClick = onLive
-                    )
-                    QuickActionCard(
-                        icon = Icons.Default.ClosedCaption,
-                        label = "Captions",
-                        modifier = Modifier.weight(1f),
-                        onClick = onCaptions
-                    )
-                    QuickActionCard(
-                        icon = Icons.Default.History,
-                        label = "History",
-                        modifier = Modifier.weight(1f),
-                        onClick = onHistory
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionCard(
-                        icon = Icons.Default.Tune,
-                        label = "Sensitivity",
-                        modifier = Modifier.weight(1f),
-                        onClick = onSettings
-                    )
-                    QuickActionCard(
-                        icon = Icons.Default.Vibration,
-                        label = "Haptics",
-                        modifier = Modifier.weight(1f),
-                        onClick = onHaptics
-                    )
-                    QuickActionCard(
-                        icon = Icons.Default.VolumeUp,
-                        label = "Voice Proxy",
-                        modifier = Modifier.weight(1f),
-                        onClick = onVoiceProxy
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    QuickActionCard(
-                        icon = Icons.Default.Forum,
-                        label = "Converse",
-                        modifier = Modifier.weight(1f),
-                        onClick = onConversation
-                    )
-                    Box(modifier = Modifier.weight(1f))
-                    Box(modifier = Modifier.weight(1f))
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                QuickActionCard(
+                    icon = Icons.Default.Tune,
+                    label = "Sensitivity",
+                    modifier = Modifier.weight(1f),
+                    onClick = onSettings
+                )
+                QuickActionCard(
+                    icon = Icons.Default.Vibration,
+                    label = "Haptics",
+                    modifier = Modifier.weight(1f),
+                    onClick = onHaptics
+                )
             }
+
             Spacer(Modifier.height(28.dp))
 
             // ── AI Models Section ────────────────────────────────

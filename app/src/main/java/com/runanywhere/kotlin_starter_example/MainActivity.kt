@@ -12,14 +12,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import com.runanywhere.kotlin_starter_example.data.ConversationRepository
 import com.runanywhere.kotlin_starter_example.data.SettingsRepository
 import com.runanywhere.kotlin_starter_example.services.ModelService
 import com.runanywhere.kotlin_starter_example.ui.screens.*
@@ -55,6 +63,7 @@ class MainActivity : ComponentActivity() {
 
         AndroidPlatformContext.initialize(this)
         SettingsRepository.init(this)
+        ConversationRepository.init(this)
         RunAnywhere.initialize("development")
 
         val basePath = java.io.File(filesDir, "runanywhere").absolutePath
@@ -81,9 +90,7 @@ class MainActivity : ComponentActivity() {
                             showPermissionDialog = false
                             requestPermissionsLauncher.launch(requiredPermissions.toTypedArray())
                         },
-                        onDismiss = {
-                            showPermissionDialog = false
-                        },
+                        onDismiss = { showPermissionDialog = false },
                         onOpenSettings = {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", packageName, null)
@@ -140,62 +147,86 @@ fun AerisApp() {
     val viewModel: MainViewModel = viewModel()
     val modelService: ModelService = viewModel()
 
-    NavHost(navController = navController, startDestination = "home") {
+    val items = listOf(
+        Screen.Home,
+        Screen.Communication,
+        Screen.Settings
+    )
 
-        composable("home") {
-            HomeScreen(
-                viewModel = viewModel,
-                modelService = modelService,
-                onLive = { /* Removed */ },
-                onSettings = { navController.navigate("sensitivity") },
-                onHaptics = { navController.navigate("haptics") },
-                onCaptions = { navController.navigate("captions") },
-                onHistory = { navController.navigate("history") },
-                onVoiceProxy = { navController.navigate("voice_proxy") },
-                onConversation = { navController.navigate("conversation") }
-            )
+    Scaffold(
+        bottomBar = {
+            NavigationBar(
+                containerColor = Color.White,
+                tonalElevation = 8.dp
+            ) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                items.forEach { screen ->
+                    NavigationBarItem(
+                        icon = { Icon(screen.icon, contentDescription = null) },
+                        label = { Text(screen.label) },
+                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF6FB1FC),
+                            selectedTextColor = Color(0xFF6FB1FC),
+                            indicatorColor = Color(0xFF6FB1FC).copy(alpha = 0.1f)
+                        )
+                    )
+                }
+            }
         }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController, 
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    viewModel = viewModel,
+                    modelService = modelService,
+                    onSettings = { navController.navigate("sensitivity") },
+                    onHaptics = { navController.navigate("haptics") }
+                )
+            }
 
-        composable("sensitivity") {
-            SensitivityScreen(onBack = { navController.popBackStack() })
-        }
+            composable(Screen.Communication.route) {
+                CommunicationScreen(
+                    onConverse = { navController.navigate("conversation") },
+                    onVoiceProxy = { navController.navigate("voice_proxy") },
+                    onCaptions = { navController.navigate("captions") }
+                )
+            }
 
-        composable("haptics") {
-            HapticsScreen(onBack = { navController.popBackStack() })
-        }
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    modelService = modelService,
+                    onHistoryClick = { navController.navigate("history") }
+                )
+            }
 
-        composable("captions") {
-            LiveCaptionScreen(
-                modelService = modelService,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable("history") {
-            HistoryScreen(
-                viewModel = viewModel,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable("voice_proxy") {
-            VoiceProxyScreen(
-                modelService = modelService,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable("conversation") {
-            ConversationScreen(
-                modelService = modelService,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable("stt") {
-            SpeechToTextScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            // ── Sub-screens (accessible via communication/home) ──
+            composable("sensitivity") { SensitivityScreen(onBack = { navController.popBackStack() }) }
+            composable("haptics") { HapticsScreen(onBack = { navController.popBackStack() }) }
+            composable("conversation") { ConversationScreen(modelService = modelService, onBack = { navController.popBackStack() }) }
+            composable("voice_proxy") { VoiceProxyScreen(modelService = modelService, onBack = { navController.popBackStack() }) }
+            composable("captions") { LiveCaptionScreen(modelService = modelService, onBack = { navController.popBackStack() }) }
+            composable("history") { HistoryScreen(viewModel = viewModel, onBack = { navController.popBackStack() }) }
         }
     }
+}
+
+sealed class Screen(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    object Home : Screen("home", "Home", Icons.Default.Home)
+    object Communication : Screen("comm", "Chat", Icons.Default.ChatBubbleOutline)
+    object Settings : Screen("settings", "Settings", Icons.Default.Settings)
 }
