@@ -31,6 +31,7 @@ fun SettingsScreen(
 ) {
     val notificationsEnabled by SettingsRepository.notificationsEnabled.collectAsState()
     val adaptiveMode by SettingsRepository.adaptiveMode.collectAsState()
+    val flashEnabled by SettingsRepository.flashEnabled.collectAsState()
 
     Column(
         modifier = Modifier
@@ -56,13 +57,21 @@ fun SettingsScreen(
         Spacer(Modifier.height(24.dp))
 
         // Preferences Section
-        SettingsSection(title = "Preferences") {
+        SettingsSection(title = "Alert Preferences") {
             SettingsToggleItem(
                 icon = Icons.Default.Notifications,
                 label = "Push Notifications",
                 description = "Get alerts for critical sounds",
                 checked = notificationsEnabled,
                 onCheckedChange = { SettingsRepository.setNotificationsEnabled(it) }
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F2F8))
+            SettingsToggleItem(
+                icon = Icons.Default.FlashOn,
+                label = "Flash Alerts",
+                description = "Flash screen on detection",
+                checked = flashEnabled,
+                onCheckedChange = { SettingsRepository.setFlashEnabled(it) }
             )
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F2F8))
             SettingsToggleItem(

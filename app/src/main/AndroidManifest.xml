@@ -16,10 +16,16 @@
     <!-- Required for microphone foreground service (Android 14+) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
+    <!-- System overlay for flash alerts -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- Optional (audio tuning + haptics) -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Storage permissions for PDF export (Legacy) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <!-- ── Hardware Feature (optional) ───────────────────────── -->
 
@@ -56,6 +62,22 @@
             android:name=".services.AudioForegroundService"
             android:foregroundServiceType="microphone"
             android:exported="false" />
+
+        <!-- ── Flash Alert Service ────────────────────────────── -->
+        <service
+            android:name=".services.FlashAlertService"
+            android:exported="false" />
+
+        <!-- ── FileProvider for sharing PDF ───────────────────── -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

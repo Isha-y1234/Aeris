@@ -1,10 +1,12 @@
 package com.runanywhere.kotlin_starter_example.ui.screens
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -28,7 +30,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.runanywhere.kotlin_starter_example.data.CaptionLine
 import com.runanywhere.kotlin_starter_example.services.ModelService
+import com.runanywhere.kotlin_starter_example.viewmodel.ExportState
+import com.runanywhere.kotlin_starter_example.viewmodel.MainViewModel
 import com.runanywhere.sdk.public.RunAnywhere
 import com.runanywhere.sdk.public.extensions.transcribe
 import kotlinx.coroutines.*
@@ -36,16 +42,11 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class CaptionLine(
-    val text: String,
-    val timestamp: Long = System.currentTimeMillis(),
-    val confidence: Float = 0.9f
-)
-
 @Composable
 fun LiveCaptionScreen(
     modelService: ModelService,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    mainViewModel: MainViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -56,7 +57,6 @@ fun LiveCaptionScreen(
     var hasPermission by remember { mutableStateOf(false) }
     var captureJob by remember { mutableStateOf<Job?>(null) }
 
-    // ✅ Defined as a val outside any composable scope
     val quickReplies = listOf(
         "Repeat please",
         "Speak slower",
@@ -64,6 +64,26 @@ fun LiveCaptionScreen(
         "Can you write?",
         "One moment"
     )
+
+    // ── PDF Export Observation ────────────────────────────────
+    val exportState by mainViewModel.exportState.collectAsState(ExportState.Idle)
+    
+    LaunchedEffect(exportState) {
+        when (val state = exportState) {
+            is ExportState.Success -> {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, state.uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(Intent.createChooser(shareIntent, "Share Transcript"))
+            }
+            is ExportState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+            }
+            else -> {}
+        }
+    }
 
     LaunchedEffect(Unit) {
         hasPermission = ContextCompat.checkSelfPermission(
@@ -175,6 +195,19 @@ fun LiveCaptionScreen(
                     color = Color.White,
                     modifier = Modifier.weight(1f)
                 )
+                
+                // EXPORT BUTTON
+                IconButton(
+                    onClick = { mainViewModel.exportCaptions(context, captions) },
+                    enabled = captions.isNotEmpty() && exportState !is ExportState.Loading
+                ) {
+                    if (exportState is ExportState.Loading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Icon(Icons.Default.Share, "Export PDF", tint = Color.White)
+                    }
+                }
+
                 if (isLive) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -310,7 +343,6 @@ fun LiveCaptionScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ✅ explicit type annotation fixes "cannot infer type" error
                     items(items = captions, key = { it.timestamp }) { caption ->
                         CaptionLineCard(caption = caption)
                     }
@@ -319,7 +351,6 @@ fun LiveCaptionScreen(
         }
 
         // ── Quick replies ─────────────────────────────────────────
-        // ✅ LazyRow with explicit String type + itemContent lambda
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()

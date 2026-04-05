@@ -51,9 +51,7 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
             val allGranted = results.values.all { it }
             if (allGranted) {
-                Log.d("MainActivity", "All permissions granted")
-            } else {
-                Log.w("MainActivity", "Some permissions denied")
+                Log.d("MainActivity", "All core permissions granted")
             }
         }
 
@@ -99,6 +97,18 @@ class MainActivity : ComponentActivity() {
                             showPermissionDialog = false
                         }
                     )
+                }
+
+                // Flash Overlay Permission Check
+                val flashEnabled by SettingsRepository.flashEnabled.collectAsState()
+                LaunchedEffect(flashEnabled) {
+                    if (flashEnabled && !Settings.canDrawOverlays(this@MainActivity)) {
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:$packageName")
+                        )
+                        startActivity(intent)
+                    }
                 }
 
                 AerisApp()

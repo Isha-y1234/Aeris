@@ -102,7 +102,7 @@ fun ToolCallingScreen(
             scope.launch {
                 isGenerating = true
                 listState.animateScrollToItem(messages.size)
-                
+
                 try {
                     val result = RunAnywhereToolCalling.generateWithTools(
                         prompt = text,
@@ -156,7 +156,7 @@ fun ToolCallingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Column {
                         Text("Tool Calling")
                         Text(
@@ -198,7 +198,7 @@ fun ToolCallingScreen(
                         downloadProgress = modelService.llmDownloadProgress,
                         onLoadClick = { modelService.downloadAndLoadLLM() }
                     )
-                    
+
                     modelService.errorMessage?.let { error ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -210,7 +210,7 @@ fun ToolCallingScreen(
                     }
                 }
             }
-            
+
             // Tools info card
             if (modelService.isLLMLoaded && toolsRegistered) {
                 ToolsInfoCard()
@@ -235,7 +235,7 @@ fun ToolCallingScreen(
                         )
                     }
                 }
-                
+
                 items(messages) { message ->
                     ToolChatMessageBubble(
                         message = message,
@@ -253,7 +253,7 @@ fun ToolCallingScreen(
                         onSuggestionClick = sendMessage
                     )
                 }
-                
+
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = SurfaceCard.copy(alpha = 0.8f),
@@ -281,9 +281,9 @@ fun ToolCallingScreen(
                             shape = RoundedCornerShape(12.dp),
                             maxLines = 4
                         )
-                        
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        
+
                         FloatingActionButton(
                             onClick = { sendMessage(inputText) },
                             containerColor = if (isGenerating) AccentViolet else if (inputText.isBlank()) TextMuted else AccentOrange
@@ -302,7 +302,7 @@ fun ToolCallingScreen(
             }
         }
     }
-    
+
     // Tool call detail sheet
     selectedToolCall?.let { toolCall ->
         ToolCallDetailSheet(
@@ -383,7 +383,7 @@ private fun ToolCallingEmptyState(
             color = TextMuted
         )
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Weather suggestions
         SuggestionCategory(
             icon = Icons.Rounded.Cloud,
@@ -393,9 +393,9 @@ private fun ToolCallingEmptyState(
             enabled = enabled,
             onSuggestionClick = onSuggestionClick
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         // Time suggestions
         SuggestionCategory(
             icon = Icons.Rounded.Schedule,
@@ -405,9 +405,9 @@ private fun ToolCallingEmptyState(
             enabled = enabled,
             onSuggestionClick = onSuggestionClick
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         // Calculator suggestions
         SuggestionCategory(
             icon = Icons.Rounded.Calculate,
@@ -447,7 +447,7 @@ private fun SuggestionCategory(
                 color = color
             )
         }
-        
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -542,7 +542,7 @@ private fun ToolChatMessageBubble(
                 }
             }
         }
-        
+
         // Message bubble
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -559,7 +559,7 @@ private fun ToolChatMessageBubble(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
-            
+
             Card(
                 modifier = Modifier.widthIn(max = 280.dp),
                 shape = RoundedCornerShape(
@@ -579,7 +579,7 @@ private fun ToolChatMessageBubble(
                     color = if (message.isUser) Color.White else TextPrimary
                 )
             }
-            
+
             if (message.isUser) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
@@ -606,13 +606,13 @@ private fun ToolCallIndicator(
     } else {
         AccentPink.copy(alpha = 0.1f)
     }
-    
+
     val borderColor = if (toolCallInfo.success) {
         AccentGreen.copy(alpha = 0.3f)
     } else {
         AccentPink.copy(alpha = 0.3f)
     }
-    
+
     val iconTint = if (toolCallInfo.success) AccentGreen else AccentPink
 
     Surface(
@@ -652,7 +652,7 @@ private fun ToolCallDetailSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -671,7 +671,7 @@ private fun ToolCallDetailSheet(
                 style = MaterialTheme.typography.headlineSmall,
                 color = TextPrimary,
             )
-            
+
             // Status
             Row(
                 modifier = Modifier
@@ -697,23 +697,23 @@ private fun ToolCallDetailSheet(
                     color = TextPrimary,
                 )
             }
-            
+
             // Tool name
             DetailRow(title = "Tool", content = toolCallInfo.toolName)
-            
+
             // Arguments
             CodeBlock(title = "Arguments", code = toolCallInfo.arguments)
-            
+
             // Result
             toolCallInfo.result?.let { result ->
                 CodeBlock(title = "Result", code = result)
             }
-            
+
             // Error
             toolCallInfo.error?.let { error ->
                 DetailRow(title = "Error", content = error, isError = true)
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -783,7 +783,7 @@ private suspend fun registerDemoTools() {
             fetchWeather(location)
         }
     )
-    
+
     // Time Tool
     RunAnywhereToolCalling.registerTool(
         definition = ToolDefinition(
@@ -797,7 +797,7 @@ private suspend fun registerDemoTools() {
             val dateFormatter = SimpleDateFormat("EEEE, MMMM d, yyyy 'at' h:mm:ss a", Locale.getDefault())
             val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
             val tz = TimeZone.getDefault()
-            
+
             mapOf(
                 "datetime" to ToolValue.string(dateFormatter.format(now)),
                 "time" to ToolValue.string(timeFormatter.format(now)),
@@ -806,7 +806,7 @@ private suspend fun registerDemoTools() {
             )
         }
     )
-    
+
     // Calculator Tool
     RunAnywhereToolCalling.registerTool(
         definition = ToolDefinition(
@@ -836,35 +836,35 @@ private suspend fun fetchWeather(location: String): Map<String, ToolValue> {
                 // Geocode the location
                 val geocodeUrl = "https://geocoding-api.open-meteo.com/v1/search?name=${URLEncoder.encode(location, "UTF-8")}&count=1"
                 val geocodeResponse = fetchUrl(geocodeUrl)
-                
+
                 val latMatch = Regex("\"latitude\":\\s*(-?\\d+\\.?\\d*)").find(geocodeResponse)
                 val lonMatch = Regex("\"longitude\":\\s*(-?\\d+\\.?\\d*)").find(geocodeResponse)
                 val nameMatch = Regex("\"name\":\\s*\"([^\"]+)\"").find(geocodeResponse)
-                
+
                 if (latMatch == null || lonMatch == null) {
                     return@withTimeout mapOf(
                         "error" to ToolValue.string("Location not found: $location")
                     )
                 }
-                
+
                 val lat = latMatch.groupValues[1]
                 val lon = lonMatch.groupValues[1]
                 val resolvedName = nameMatch?.groupValues?.get(1) ?: location
-                
+
                 // Fetch weather
                 val weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
                 val weatherResponse = fetchUrl(weatherUrl)
-                
+
                 val tempMatch = Regex("\"temperature_2m\":\\s*(-?\\d+\\.?\\d*)").find(weatherResponse)
                 val humidityMatch = Regex("\"relative_humidity_2m\":\\s*(\\d+)").find(weatherResponse)
                 val windMatch = Regex("\"wind_speed_10m\":\\s*(-?\\d+\\.?\\d*)").find(weatherResponse)
                 val codeMatch = Regex("\"weather_code\":\\s*(\\d+)").find(weatherResponse)
-                
+
                 val temperature = tempMatch?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
                 val humidity = humidityMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
                 val windSpeed = windMatch?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
                 val weatherCode = codeMatch?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                
+
                 val condition = when (weatherCode) {
                     0 -> "Clear sky"
                     1, 2, 3 -> "Partly cloudy"
@@ -876,7 +876,7 @@ private suspend fun fetchWeather(location: String): Map<String, ToolValue> {
                     95, 96, 99 -> "Thunderstorm"
                     else -> "Unknown"
                 }
-                
+
                 mapOf(
                     "location" to ToolValue.string(resolvedName),
                     "temperature_celsius" to ToolValue.number(temperature),
@@ -933,7 +933,7 @@ private fun evaluateSimpleExpression(expr: String): Double {
 private fun tokenize(expr: String): List<String> {
     val tokens = mutableListOf<String>()
     var current = StringBuilder()
-    
+
     for (char in expr) {
         when {
             char.isDigit() || char == '.' -> current.append(char)

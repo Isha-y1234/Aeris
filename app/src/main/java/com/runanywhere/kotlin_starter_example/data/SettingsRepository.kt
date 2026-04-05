@@ -10,6 +10,7 @@ object SettingsRepository {
     private const val KEY_ADAPTIVE = "adaptive_mode"
     private const val PREFIX_SENSITIVITY = "sensitivity_"
     private const val KEY_NOTIFICATION_ENABLED = "notifications_enabled"
+    private const val KEY_FLASH_ENABLED = "flash_alerts_enabled"
 
     private lateinit var prefs: SharedPreferences
 
@@ -22,10 +23,14 @@ object SettingsRepository {
     private val _notificationsEnabled = MutableStateFlow(true)
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled
 
+    private val _flashEnabled = MutableStateFlow(true)
+    val flashEnabled: StateFlow<Boolean> = _flashEnabled
+
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         _adaptiveMode.value = prefs.getBoolean(KEY_ADAPTIVE, false)
         _notificationsEnabled.value = prefs.getBoolean(KEY_NOTIFICATION_ENABLED, true)
+        _flashEnabled.value = prefs.getBoolean(KEY_FLASH_ENABLED, true)
         
         val map = SoundType.values().associateWith { type ->
             prefs.getFloat(PREFIX_SENSITIVITY + type.name, 0.5f)
@@ -48,5 +53,10 @@ object SettingsRepository {
     fun setNotificationsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_NOTIFICATION_ENABLED, enabled).apply()
         _notificationsEnabled.value = enabled
+    }
+
+    fun setFlashEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_FLASH_ENABLED, enabled).apply()
+        _flashEnabled.value = enabled
     }
 }
