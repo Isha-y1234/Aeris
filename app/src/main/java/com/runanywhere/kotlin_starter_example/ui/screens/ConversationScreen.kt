@@ -124,7 +124,7 @@ fun ConversationScreen(
                         )
                     }
                     appendLine("\nSuggest exactly 3 short natural replies (max 8 words each).")
-                    appendLine("Format: one reply per line, no numbering, no punctuation.")
+                    appendLine("Format: one reply per line, no numbering, no punctuation,NEVER include labels like 'Me:', 'Other:', 'Person:', 'Suggestion:','Myself:', '1.', 'A.', or 'Reply:'., NEVER include quotes around the text.")
                 }
 
                 // ✅ Use chat() not generate() — better for instruction following

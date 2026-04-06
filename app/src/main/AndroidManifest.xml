@@ -27,6 +27,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+<!--    NOTIFICATIONS-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- ── Hardware Feature (optional) ───────────────────────── -->
 
     <uses-feature

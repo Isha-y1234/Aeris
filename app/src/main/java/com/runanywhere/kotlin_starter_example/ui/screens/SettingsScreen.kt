@@ -85,6 +85,18 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(24.dp))
 
+        // Help & Onboarding
+        SettingsSection(title = "Help & Support") {
+            SettingsActionItem(
+                icon = Icons.Default.HelpCenter,
+                label = "Show Walkthrough",
+                description = "Learn how to use Aeris again",
+                onClick = { SettingsRepository.setWalkthroughCompleted(false) }
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+
         // Data & History
         SettingsSection(title = "Data & History") {
             SettingsActionItem(

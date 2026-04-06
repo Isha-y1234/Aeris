@@ -1,7 +1,10 @@
 package com.runanywhere.kotlin_starter_example.ui.screens
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -10,9 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -21,7 +21,10 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.zIndex
+import com.runanywhere.kotlin_starter_example.data.SettingsRepository
 import com.runanywhere.kotlin_starter_example.data.SoundType
 import com.runanywhere.kotlin_starter_example.services.AudioForegroundService
 import com.runanywhere.kotlin_starter_example.services.ModelService
@@ -38,8 +41,17 @@ fun HomeScreen(
 
     val sound: SoundType? by viewModel.currentSound.collectAsState(initial = null)
     val confidence by viewModel.confidence.collectAsState()
+    val walkthroughCompleted by SettingsRepository.walkthroughCompleted.collectAsState()
     
     var isOn by remember { mutableStateOf(AudioForegroundService.isRunning) }
+    var showWalkthrough by remember { mutableStateOf(false) }
+
+    // Start walkthrough automatically if not completed
+    LaunchedEffect(walkthroughCompleted) {
+        if (!walkthroughCompleted) {
+            showWalkthrough = true
+        }
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
@@ -82,7 +94,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // ── Header (Logo removed) ──────────────────────────
+            // ── Header ──────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -245,6 +257,132 @@ fun HomeScreen(
             ModelDownloadSection(modelService = modelService)
 
             Spacer(Modifier.height(32.dp))
+        }
+
+        // ── Walkthrough Overlay ───────────────────────────────
+        AnimatedVisibility(
+            visible = showWalkthrough,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.zIndex(100f)
+        ) {
+            WalkthroughOverlay(
+                onDismiss = {
+                    showWalkthrough = false
+                    SettingsRepository.setWalkthroughCompleted(true)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun WalkthroughOverlay(onDismiss: () -> Unit) {
+    var step by remember { mutableStateOf(1) }
+    val totalSteps = 4
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.75f))
+            .clickable(enabled = false) {} // block clicks
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Quick Guide ($step/$totalSteps)",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6FB1FC)
+                    )
+                    TextButton(onClick = onDismiss) {
+                        Text("Skip", color = Color(0xFFB0B0B0))
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                val (icon, title, desc) = when (step) {
+                    1 -> Triple(
+                        Icons.Default.Mic,
+                        "The Main Switch",
+                        "Tap the big circle in the center to start listening for sounds. It pulses when active!"
+                    )
+                    2 -> Triple(
+                        Icons.Default.CloudDownload,
+                        "AI Models",
+                        "Download STT, TTS, and LLM models at the bottom to unlock Live Captions and Smart Replies."
+                    )
+                    3 -> Triple(
+                        Icons.Default.Tune,
+                        "Personalize",
+                        "Use 'Sensitivity' to adjust which sounds trigger alerts, and 'Haptics' to change vibration patterns."
+                    )
+                    else -> Triple(
+                        Icons.Default.AutoAwesome,
+                        "You're Ready!",
+                        "Aeris works entirely on your device. Your privacy is safe. Let's get started!"
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF6FB1FC).copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, null, tint = Color(0xFF6FB1FC), modifier = Modifier.size(40.dp))
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A2340)
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = desc,
+                    fontSize = 15.sp,
+                    color = Color(0xFF6B7A9A),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 22.sp
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                Button(
+                    onClick = {
+                        if (step < totalSteps) step++ else onDismiss()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6FB1FC))
+                ) {
+                    Text(if (step < totalSteps) "Next" else "Get Started")
+                }
+            }
         }
     }
 }

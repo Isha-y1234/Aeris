@@ -14,6 +14,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -160,6 +161,7 @@ fun AerisApp() {
     val items = listOf(
         Screen.Home,
         Screen.Communication,
+        Screen.Profile,
         Screen.Settings
     )
 
@@ -217,6 +219,10 @@ fun AerisApp() {
                 )
             }
 
+            composable(Screen.Profile.route) {
+                ProfileScreen()
+            }
+
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     modelService = modelService,
@@ -238,5 +244,6 @@ fun AerisApp() {
 sealed class Screen(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Home : Screen("home", "Home", Icons.Default.Home)
     object Communication : Screen("comm", "Chat", Icons.Default.ChatBubbleOutline)
+    object Profile : Screen("profile", "Profile", Icons.Default.AccountCircle)
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
 }

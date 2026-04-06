@@ -9,11 +9,9 @@ import android.media.MediaRecorder
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -56,14 +54,6 @@ fun LiveCaptionScreen(
     var captions by remember { mutableStateOf(listOf<CaptionLine>()) }
     var hasPermission by remember { mutableStateOf(false) }
     var captureJob by remember { mutableStateOf<Job?>(null) }
-
-    val quickReplies = listOf(
-        "Repeat please",
-        "Speak slower",
-        "I am deaf",
-        "Can you write?",
-        "One moment"
-    )
 
     // ── PDF Export Observation ────────────────────────────────
     val exportState by mainViewModel.exportState.collectAsState(ExportState.Idle)
@@ -346,26 +336,6 @@ fun LiveCaptionScreen(
                     items(items = captions, key = { it.timestamp }) { caption ->
                         CaptionLineCard(caption = caption)
                     }
-                }
-            }
-        }
-
-        // ── Quick replies ─────────────────────────────────────────
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(items = quickReplies) { reply: String ->
-                OutlinedButton(
-                    onClick = { },
-                    shape = RoundedCornerShape(50.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                    border = BorderStroke(1.dp, Color(0xFF6FB1FC))
-                ) {
-                    Text(reply, fontSize = 12.sp, color = Color(0xFF6FB1FC))
                 }
             }
         }

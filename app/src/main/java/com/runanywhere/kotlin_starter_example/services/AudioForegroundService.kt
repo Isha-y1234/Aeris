@@ -70,8 +70,10 @@ class AudioForegroundService : Service() {
                                     // Trigger haptics
                                     HapticManager.trigger(applicationContext, top.key)
                                     
-                                    // Trigger Visual Flash
-                                    if (SettingsRepository.flashEnabled.value && Settings.canDrawOverlays(applicationContext)) {
+                                    // Trigger Visual Flash (Removed for VOICE as requested)
+                                    if (SettingsRepository.flashEnabled.value && 
+                                        Settings.canDrawOverlays(applicationContext) &&
+                                        top.key != SoundType.VOICE) {
                                         triggerFlashAlert(top.key)
                                     }
                                     
@@ -92,13 +94,15 @@ class AudioForegroundService : Service() {
 
     private fun triggerFlashAlert(type: SoundType) {
         val color = when (type) {
-            SoundType.ALARM -> Color.RED
-            SoundType.SIREN -> Color.parseColor("#FF9800")
+            SoundType.ALARM -> Color.parseColor("#FF9800")
+            SoundType.SIREN -> Color.RED
             SoundType.HORN -> Color.YELLOW
-            SoundType.DOORBELL -> Color.GREEN
-            SoundType.VOICE -> Color.BLUE
+            SoundType.DOORBELL -> Color.BLUE
+            SoundType.VOICE -> Color.TRANSPARENT // Should not be reached due to filter
         }
-        FlashAlertService.start(applicationContext, color)
+        if (color != Color.TRANSPARENT) {
+            FlashAlertService.start(applicationContext, color)
+        }
     }
 
     private fun checkAndSendNotification(predictions: Map<SoundType, Float>) {
@@ -113,6 +117,16 @@ class AudioForegroundService : Service() {
     }
 
     private fun sendSoundNotification(type: SoundType, confidence: Float) {
+        // Check for Android 13+ permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.e(TAG, "Notification permission not granted")
+                return
+            }
+        }
         val manager = getSystemService(NotificationManager::class.java)
         val notification = NotificationCompat.Builder(this, "aeris_alerts")
             .setContentTitle("${type.name} Detected!")
