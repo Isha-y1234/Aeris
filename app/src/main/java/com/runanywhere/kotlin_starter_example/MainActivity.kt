@@ -161,7 +161,6 @@ fun AerisApp() {
     val items = listOf(
         Screen.Home,
         Screen.Communication,
-        Screen.Profile,
         Screen.Settings
     )
 
@@ -217,10 +216,6 @@ fun AerisApp() {
                     onVoiceProxy = { navController.navigate("voice_proxy") },
                     onCaptions = { navController.navigate("captions") }
                 )
-            }
-
-            composable(Screen.Profile.route) {
-                ProfileScreen()
             }
 
             composable(Screen.Settings.route) {

@@ -46,7 +46,7 @@ fun SensitivityScreen(onBack: () -> Unit) {
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Settings",
+                    text = "Sensitivity",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
